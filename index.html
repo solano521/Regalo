@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>tulipanes</title>
+
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+    font-family: sans-serif;
+  }
+
+  /* ---------- PANTALLA INICIAL AZUL ---------- */
+  #loginScreen {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #184eb1, #184ca7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+    transition: opacity 1.2s ease;
+  }
+
+  #loginScreen.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  form.ui-form {
+    background: rgba(255,255,255,0.12);
+    padding: 24px;
+    border-radius: 10px;
+    color: #fff;
+    width: 260px;
+  }
+
+  .ui-form label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 14px;
+  }
+
+  .ui-form input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 14px;
+    background: rgba(255,255,255,0.2);
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    outline: none;
+  }
+
+  .ui-form button {
+    width: 100%;
+    padding: 10px;
+    background: #0a2540;
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 15px;
+  }
+
+  /* ---------- ESCENA NOCTURNA ---------- */
+  #scene {
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at top, #0b1026, #02030a);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  canvas {
+    background: transparent;
+  }
+</style>
+</head>
+
+<body>
+
+<!-- PANTALLA AZUL -->
+<div id="loginScreen">
+  <form class="ui-form" id="loginForm">
+    
+    <label>ingresa tu nombre (acepta cual sea)</label>
+    <input type="" required>
+
+    <button type="submit">listo </button>
+  </form>
+</div>
+
+<!-- ESCENA CON TULIPANES -->
+<div id="scene">
+  <canvas id="canvas" width="700" height="500"></canvas>
+</div>
+
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+let step = 0;
+let started = false;
+
+/* ---------- HiDPI ---------- */
+(() => {
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.width;
+  const h = canvas.height;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  canvas.style.width = w + "px";
+  canvas.style.height = h + "px";
+  ctx.scale(dpr, dpr);
+})();
+
+/* ---------- ESTRELLAS ---------- */
+const stars = Array.from({ length: 150 }, () => ({
+  x: Math.random() * canvas.clientWidth,
+  y: Math.random() * canvas.clientHeight,
+  r: Math.random() * 2
+}));
+
+function drawStars() {
+  ctx.fillStyle = "white";
+  stars.forEach(s => {
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+
+/* ---------- LUNA ---------- */
+function drawMoon() {
+  ctx.save();
+  ctx.shadowBlur = 25;
+  ctx.shadowColor = "rgba(255,255,220,0.8)";
+  ctx.fillStyle = "#f5f3ce";
+  ctx.beginPath();
+  ctx.arc(580, 90, 40, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+/* ---------- TULIPÁN ---------- */
+function drawTulip(x, baseY, height, tilt) {
+  ctx.save();
+  ctx.translate(x, baseY);
+  ctx.rotate(tilt);
+
+  ctx.shadowBlur = 18;
+  ctx.shadowColor = "rgba(255,80,140,0.9)";
+
+  ctx.strokeStyle = "#3cb371";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(0, -height);
+  ctx.stroke();
+
+  ctx.fillStyle = "#ff4d6d";
+  ctx.beginPath();
+  ctx.moveTo(0, -height);
+  ctx.quadraticCurveTo(-18, -height - 30, -6, -height - 55);
+  ctx.quadraticCurveTo(0, -height - 40, 6, -height - 55);
+  ctx.quadraticCurveTo(18, -height - 30, 0, -height);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+/* ---------- RAMO ---------- */
+function drawWrap() {
+  ctx.save();
+  ctx.fillStyle = "#b08d57";
+  ctx.shadowBlur = 15;
+  ctx.shadowColor = "rgba(255,200,120,0.4)";
+  ctx.beginPath();
+  ctx.moveTo(250, 360);
+  ctx.lineTo(450, 360);
+  ctx.lineTo(350, 480);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+/* ---------- ANIMACIÓN ---------- */
+function animate() {
+  if (!started) return;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawStars();
+  drawMoon();
+
+  const baseY = 360;
+
+  if (step > 10) drawTulip(320, baseY, Math.min(step * 1.2, 120), -0.25);
+  if (step > 25) drawTulip(350, baseY, Math.min((step - 10) * 1.2, 140), 0);
+  if (step > 40) drawTulip(380, baseY, Math.min((step - 20) * 1.2, 110), 0.25);
+  if (step > 55) drawTulip(300, baseY, Math.min((step - 30) * 1.2, 100), -0.4);
+  if (step > 70) drawTulip(400, baseY, Math.min((step - 40) * 1.2, 105), 0.4);
+
+  drawWrap();
+
+  step++;
+  requestAnimationFrame(animate);
+}
+
+/* ---------- EVENTO FORM ---------- */
+document.getElementById("loginForm").addEventListener("submit", e => {
+  e.preventDefault();
+
+  const screen = document.getElementById("loginScreen");
+  screen.classList.add("hidden");
+
+  setTimeout(() => {
+    started = true;
+    animate();
+  }, 800);
+});
+</script>
+
+</body>
+</html>
